@@ -42,6 +42,7 @@ img{max-width:100%}
   --go-ink: #FFFFFF;
   --stop: #C2452D;
   --absent: #8B958F;
+  --on-group: #FFFFFF;
   --f-display: "Dela Gothic One", "Hiragino Sans", "Yu Gothic", sans-serif;
   --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
 }
@@ -51,6 +52,7 @@ img{max-width:100%}
     --board: #1E3328; --board-edge: #162820; --chalk-ink: #E2E9E1; --chalk-dim: rgba(226,233,225,0.32);
     --desk: #B9965F; --desk-edge: #8E6F40; --desk-ink: #241808;
     --hit: #FFD54A; --hit-glow: rgba(255,213,74,0.5); --go: #3A9663; --go-ink: #FFFFFF; --stop: #D4573E; --absent: #5F6A64;
+    --on-group: #FFFFFF;
     color-scheme: dark;
   }
 }
@@ -59,10 +61,12 @@ img{max-width:100%}
   --board: #1E3328; --board-edge: #162820; --chalk-ink: #E2E9E1; --chalk-dim: rgba(226,233,225,0.32);
   --desk: #B9965F; --desk-edge: #8E6F40; --desk-ink: #241808;
   --hit: #FFD54A; --hit-glow: rgba(255,213,74,0.5); --go: #3A9663; --go-ink: #FFFFFF; --stop: #D4573E; --absent: #5F6A64;
+  --on-group: #FFFFFF;
   color-scheme: dark;
 }
 
 html, body { height: 100%; }
+[hidden] { display: none !important; }
 body {
   background: var(--paper); color: var(--ink);
   font-family: var(--f-body); font-size: 15px; line-height: 1.5;
@@ -89,6 +93,8 @@ button { cursor: pointer; }
   min-height: 38px; white-space: nowrap;
 }
 .seg button[aria-pressed="true"] { background: var(--board); color: var(--chalk-ink); }
+.seg.wide { display: flex; }
+.seg.wide button { flex: 1; font-size: 15px; }
 .sel {
   min-height: 40px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 0 10px; max-width: 12em;
 }
@@ -134,25 +140,33 @@ button { cursor: pointer; }
   background: var(--desk);
   box-shadow: inset 0 calc(var(--ch) * -0.1) 0 var(--desk-edge);
 }
+/* 班の色：机の手前に色帯＋左上に班番号 */
+.cell.on.grp { box-shadow: inset 0 calc(var(--ch) * -0.16) 0 var(--gcol); }
+.edit.groups .cell.on.grp { background: color-mix(in srgb, var(--gcol) 42%, var(--desk)); }
+.gbadge {
+  position: absolute; top: 3px; left: 4px; height: calc(var(--ch) * 0.3); min-width: calc(var(--ch) * 0.3);
+  padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: var(--gcol); color: var(--on-group);
+  font-size: calc(var(--ch) * 0.2); font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center;
+}
 .cell .num { font-family: var(--f-display); font-size: calc(var(--ch) * 0.42); line-height: 1; padding-bottom: calc(var(--ch) * 0.06); }
-.cell .ghost { font-size: calc(var(--ch) * 0.22); opacity: 0.45; }
-.cell.lit { background: var(--hit); box-shadow: 0 0 0 3px var(--hit), 0 0 calc(var(--cw) * 0.45) var(--hit-glow); z-index: 2; }
-.cell.chosen { background: var(--hit); z-index: 3; box-shadow: 0 0 0 4px var(--hit), 0 0 calc(var(--cw) * 0.6) var(--hit-glow); animation: ring 1.1s ease-out 3; }
+.cell.absent, .cell.on.absent { background: var(--absent); color: var(--chalk-ink); opacity: 0.75; }
+.cell.absent::after { content: "欠"; position: absolute; top: 3px; right: 5px; font-size: calc(var(--ch) * 0.2); font-weight: 700; }
+.cell.done { opacity: 0.5; }
+.cell.done::after { content: "済"; position: absolute; top: 3px; right: 5px; font-size: calc(var(--ch) * 0.2); font-weight: 700; color: var(--desk-ink); }
+.cell.absent .num { opacity: 0.8; }
+.cell.on.lit { background: var(--hit); opacity: 1; box-shadow: 0 0 0 3px var(--hit), 0 0 calc(var(--cw) * 0.45) var(--hit-glow); z-index: 2; }
+.cell.on.chosen { background: var(--hit); opacity: 1; z-index: 3; box-shadow: 0 0 0 4px var(--hit), 0 0 calc(var(--cw) * 0.6) var(--hit-glow); animation: ring 1.1s ease-out 3; }
+.cell.on.chosen.absent { background: var(--absent); box-shadow: 0 0 0 4px var(--hit); opacity: 0.8; }
 @keyframes ring {
   0% { box-shadow: 0 0 0 4px var(--hit), 0 0 0 4px var(--hit-glow); transform: scale(1); }
   40% { transform: scale(1.08); }
   100% { box-shadow: 0 0 0 4px var(--hit), 0 0 0 calc(var(--cw) * 0.35) rgba(255,213,74,0); transform: scale(1); }
 }
-.cell.absent { background: var(--absent); box-shadow: none; color: var(--chalk-ink); opacity: 0.75; }
-.cell.absent::after { content: "欠"; position: absolute; top: 3px; right: 5px; font-size: calc(var(--ch) * 0.2); font-weight: 700; }
-.cell.done { opacity: 0.5; }
-.cell.done::after { content: "済"; position: absolute; top: 3px; right: 5px; font-size: calc(var(--ch) * 0.2); font-weight: 700; color: var(--desk-ink); }
-.cell.absent .num { opacity: 0.8; }
 
 /* edit-mode cells */
 .edit .cell { cursor: pointer; }
 .edit .cell.off { border: 2px dashed var(--chalk-dim); color: var(--chalk-dim); font-size: calc(var(--ch) * 0.34); }
-.edit.numbers .cell.off { border-style: dotted; opacity: 0.4; cursor: default; }
+.edit.numbers .cell.off, .edit.groups .cell.off { border-style: dotted; opacity: 0.4; cursor: default; }
 .cell input {
   width: 78%; height: 68%; box-sizing: border-box; text-align: center; border: 2px solid var(--desk-edge); border-radius: 6px;
   background: rgba(255,255,255,0.75); color: var(--desk-ink); font-family: var(--f-display); font-size: calc(var(--ch) * 0.32); padding: 0;
@@ -164,10 +178,12 @@ button { cursor: pointer; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .label { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; color: var(--muted); }
 .result { min-height: 132px; justify-content: center; }
-.result .big { font-family: var(--f-display); font-size: 64px; line-height: 1; display: flex; align-items: baseline; gap: 6px; }
-.result .big small { font-size: 24px; }
+.result .big { font-family: var(--f-display); font-size: 64px; line-height: 1; display: flex; align-items: center; gap: 8px; }
+.result .big small { font-size: 24px; align-self: flex-end; padding-bottom: 6px; }
 .result .where { font-size: 15px; font-weight: 500; }
 .result .idle { color: var(--muted); }
+.gdot { display: inline-block; width: 0.55em; height: 0.55em; border-radius: 50%; background: var(--gcol); flex: none; }
+.gdot.sm { width: 10px; height: 10px; margin-right: 4px; vertical-align: -1px; }
 
 .go {
   border: 0; border-radius: 14px; min-height: 76px; font-family: var(--f-display); font-size: 28px; letter-spacing: 0.2em;
@@ -176,7 +192,7 @@ button { cursor: pointer; }
 .go.spinning { background: var(--stop); }
 .go:disabled { opacity: 0.6; cursor: default; }
 .go:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2); }
-.note { font-size: 13px; color: var(--muted); }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
 .warn { font-size: 13px; color: var(--stop); font-weight: 500; }
 
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -203,8 +219,18 @@ details[open] > summary { margin-bottom: 8px; }
 .text { min-height: 40px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); padding: 0 10px; width: 100%; box-sizing: border-box; }
 select.text { width: auto; }
 
+/* 班パレット */
+.gpal { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 6px; }
+.gbtn {
+  min-height: 44px; border: 2px solid transparent; border-radius: 9px; background: var(--paper);
+  display: flex; align-items: center; gap: 6px; padding: 0 10px; font-size: 14px; font-weight: 700; text-align: left; white-space: nowrap;
+  box-shadow: inset 4px 0 0 var(--gcol);
+}
+.gbtn .cnt { font-weight: 400; font-size: 12px; color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+.gbtn[aria-pressed="true"] { border-color: var(--gcol); background: color-mix(in srgb, var(--gcol) 16%, var(--paper)); }
+
 @media (prefers-reduced-motion: reduce) {
-  .cell.chosen { animation: none; }
+  .cell.on.chosen { animation: none; }
 }
 </style>
 </head>
@@ -237,27 +263,32 @@ select.text { width: auto; }
 
     <!-- roulette panel -->
     <aside class="panel" id="panelRoulette">
+      <div class="seg wide" role="group" aria-label="指名の対象">
+        <button id="tSeat" aria-pressed="true">個人を指名</button>
+        <button id="tGroup" aria-pressed="false">班を指名</button>
+      </div>
       <div class="card result" id="result" aria-live="polite"></div>
       <button class="go" id="goBtn">スタート</button>
       <div class="card">
         <details id="optDetails">
           <summary>設定と欠席</summary>
           <div class="opts">
-            <label class="check"><input type="checkbox" id="optExclude" checked> 当たった席は次から除く</label>
+            <label class="check"><input type="checkbox" id="optExclude" checked> 当たった席・班は次から除く</label>
             <label class="check"><input type="checkbox" id="optNums" checked> 座席に出席番号を表示</label>
+            <label class="check"><input type="checkbox" id="optGroups" checked> 座席に班の色を表示</label>
             <label class="check"><input type="checkbox" id="optSound"> 効果音を鳴らす</label>
             <div class="row" style="margin-top:6px">
               <button class="btn" id="absentBtn" aria-pressed="false">欠席の席をタップで選ぶ</button>
             </div>
             <div class="row">
-              <button class="btn" id="resetPicked">当たった席をリセット</button>
+              <button class="btn" id="resetPicked">当たりをリセット</button>
               <button class="btn" id="resetAbsent">欠席をリセット</button>
             </div>
           </div>
         </details>
       </div>
       <div class="card" id="historyCard">
-        <div class="label">これまでの指名</div>
+        <div class="label" id="historyLabel">これまでの指名</div>
         <div class="history" id="history"></div>
       </div>
     </aside>
@@ -281,6 +312,7 @@ select.text { width: auto; }
         <div class="seg" role="group" aria-label="編集する内容" style="align-self:flex-start">
           <button id="eLayout" aria-pressed="true">席の配置</button>
           <button id="eNumbers" aria-pressed="false">出席番号</button>
+          <button id="eGroups" aria-pressed="false">班分け</button>
         </div>
         <div id="layoutTools" class="opts" style="gap:10px">
           <div class="sizes">
@@ -293,10 +325,10 @@ select.text { width: auto; }
             <button class="btn" id="fillAll">すべて席にする</button>
             <button class="btn" id="grid77">7×7から選ぶ</button>
           </div>
-          <p class="note" style="margin:0">座席をタップすると「席あり／なし」が切り替わります。通路や空きは「なし」に。</p>
+          <p class="note">座席をタップすると「席あり／なし」が切り替わります。通路や空きは「なし」に。</p>
         </div>
         <div id="numberTools" class="opts" style="gap:10px" hidden>
-          <p class="note" style="margin:0">各席に出席番号を入力します（空欄でも使えます）。</p>
+          <p class="note">各席に出席番号を入力します（空欄でも使えます）。</p>
           <div class="row">
             <select class="text" id="numDir" aria-label="連番の向き">
               <option value="v">縦に連番</option>
@@ -312,6 +344,19 @@ select.text { width: auto; }
             <button class="btn" id="clearNum">番号を消す</button>
           </div>
         </div>
+        <div id="groupTools" class="opts" style="gap:10px" hidden>
+          <div class="sizes">
+            <span>班の数</span>
+            <div class="stepper"><button id="gMinus" aria-label="班を減らす">−</button><output id="gOut">6</output><button id="gPlus" aria-label="班を増やす">＋</button><span class="note">班</span></div>
+          </div>
+          <div class="label">割り当てる班を選ぶ</div>
+          <div class="gpal" id="gPal"></div>
+          <p class="note">班を選んでから座席をタップします。同じ班の席をもう一度タップすると解除されます。</p>
+          <div class="row">
+            <button class="btn" id="gAuto">2列ずつ前から自動で分ける</button>
+            <button class="btn" id="gClear">班分けを消す</button>
+          </div>
+        </div>
       </div>
       <p class="note">設定はこの端末のブラウザに保存されます。</p>
     </aside>
@@ -322,7 +367,8 @@ select.text { width: auto; }
 (function () {
   "use strict";
   var KEY = "seat-roulette-v1";
-  var MAX = 9;
+  var MAX = 9, GMAX = 12;
+  var GCOL = ["#E0533F", "#2F7FD0", "#2E9E57", "#E8961E", "#8A55CC", "#16A39D", "#D64F93", "#7C8E1F", "#4E5FD6", "#B0621C", "#3BA9DE", "#A33C5C"];
 
   function makeSeats(rows, cols, on) {
     var s = [];
@@ -331,19 +377,25 @@ select.text { width: auto; }
   }
   function uid() { return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   function sampleClass() {
-    var s = makeSeats(6, 6, true), n = 1;
+    var s = makeSeats(6, 6, true), n = 1, map = {};
     for (var c = 0; c < 6; c++) for (var r = 0; r < 6; r++) s[r][c].num = String(n++);
-    s[5][5].on = false; s[5][5].num = ""; s[5][4].num = "";
-    s[5][4].on = false;
-    return { id: uid(), name: "1年1組（例）", rows: 6, cols: 6, seats: s };
+    s[5][5].on = false; s[5][5].num = ""; s[5][4].on = false; s[5][4].num = "";
+    for (var r2 = 0; r2 < 6; r2++) for (var c2 = 0; c2 < 6; c2++) if (s[r2][c2].on) map[r2 + "-" + c2] = Math.floor(r2 / 3) * 3 + Math.floor(c2 / 2);
+    return { id: uid(), name: "1年1組（例）", rows: 6, cols: 6, seats: s, groups: { count: 6, map: map } };
   }
+  function normalize(c) { if (!c.groups || typeof c.groups !== "object") c.groups = { count: 6, map: {} }; if (!c.groups.map) c.groups.map = {}; return c; }
 
-  var state = { classes: [], currentId: null, view: "student", opts: { exclude: true, nums: true, sound: false } };
+  var state = { classes: [], currentId: null, view: "student", target: "seat", opts: { exclude: true, nums: true, groups: true, sound: false } };
   try {
     var saved = JSON.parse(localStorage.getItem(KEY) || "null");
-    if (saved && saved.classes && saved.classes.length) state = Object.assign(state, saved);
+    if (saved && saved.classes && saved.classes.length) {
+      state = Object.assign(state, saved);
+      state.opts = Object.assign({ exclude: true, nums: true, groups: true, sound: false }, saved.opts || {});
+    }
   } catch (e) {}
   if (!state.classes.length) { var sc = sampleClass(); state.classes.push(sc); state.currentId = sc.id; }
+  state.classes.forEach(normalize);
+  if (state.target !== "group") state.target = "seat";
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
   function cls() {
     var f = state.classes.find(function (c) { return c.id === state.currentId; });
@@ -353,15 +405,20 @@ select.text { width: auto; }
 
   // session-only state per class
   var session = {};
-  function ses() { var id = cls().id; if (!session[id]) session[id] = { absent: new Set(), picked: new Set(), history: [], last: null }; return session[id]; }
+  function ses() {
+    var id = cls().id;
+    if (!session[id]) session[id] = { absent: new Set(), picked: new Set(), history: [], last: null, pickedG: new Set(), historyG: [], lastG: null };
+    return session[id];
+  }
 
-  var mode = "roulette", editSub = "layout", absentMode = false;
-  var spinning = false, settling = false, timer = null, litKey = null;
+  var mode = "roulette", editSub = "layout", absentMode = false, currentG = 0;
+  var spinning = false, settling = false, timer = null, litItem = null, litKeys = [];
 
   var $ = function (id) { return document.getElementById(id); };
   var grid = $("grid"), wrap = $("gridWrap"), room = $("room");
+  function isG() { return state.target === "group"; }
 
-  // ---------- rendering ----------
+  // ---------- helpers ----------
   function seatAt(c, key) { var p = key.split("-"); return c.seats[+p[0]][+p[1]]; }
   function where(key) {
     var p = key.split("-"), r = +p[0] + 1, col = +p[1] + 1;
@@ -369,39 +426,68 @@ select.text { width: auto; }
       ? "教卓から見て 右から" + col + "列目・前から" + r + "番目"
       : "黒板に向かって 左から" + col + "列目・前から" + r + "番目";
   }
+  function groupOf(c, key) { var g = c.groups.map[key]; return (g != null && g < c.groups.count) ? g : null; }
+  function groupSeats(g) {
+    var c = cls(), out = [];
+    for (var r = 0; r < c.rows; r++) for (var col = 0; col < c.cols; col++) {
+      var k = r + "-" + col;
+      if (c.seats[r][col].on && c.groups.map[k] === g) out.push(k);
+    }
+    return out;
+  }
+  function gname(g) { return (g + 1) + "班"; }
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (m) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]; }); }
 
+  // ---------- rendering ----------
   function renderGrid() {
     var c = cls(), s = ses();
+    var editGroups = mode === "edit" && editSub === "groups";
+    var showG = state.opts.groups || editGroups || (mode === "roulette" && isG());
     grid.style.setProperty("--cols", c.cols);
     grid.innerHTML = "";
-    grid.className = "grid";
     room.classList.toggle("teacher", state.view === "teacher");
     room.classList.toggle("edit", mode === "edit");
     room.classList.toggle("numbers", mode === "edit" && editSub === "numbers");
+    room.classList.toggle("groups", editGroups);
     room.classList.toggle("pickmode", mode === "roulette" && absentMode);
     for (var dr = 0; dr < c.rows; dr++) {
       for (var dc = 0; dc < c.cols; dc++) {
         var r = state.view === "student" ? dr : c.rows - 1 - dr;
         var col = state.view === "student" ? dc : c.cols - 1 - dc;
-        var seat = c.seats[r][col], key = r + "-" + col;
+        var seat = c.seats[r][col], key = r + "-" + col, g = groupOf(c, key);
         var el = document.createElement(mode === "edit" && editSub === "numbers" && seat.on ? "div" : "button");
         el.className = "cell " + (seat.on ? "on" : "off");
         el.dataset.key = key;
         if (el.tagName === "BUTTON") el.type = "button";
+        var html = "";
+        if (seat.on && showG && g != null) {
+          el.classList.add("grp"); el.style.setProperty("--gcol", GCOL[g]);
+          html += '<span class="gbadge">' + (g + 1) + "</span>";
+        }
         if (mode === "roulette") {
           if (!seat.on) { el.disabled = true; el.setAttribute("aria-hidden", "true"); el.tabIndex = -1; }
           else {
             if (s.absent.has(key)) el.classList.add("absent");
-            else if (state.opts.exclude && s.picked.has(key)) el.classList.add("done");
-            if (s.last === key && !spinning) el.classList.add("chosen");
-            if (state.opts.nums && seat.num) el.innerHTML = '<span class="num">' + esc(seat.num) + "</span>";
-            el.setAttribute("aria-label", (seat.num ? seat.num + "番 " : "") + where(key));
+            if (isG()) {
+              if (!s.absent.has(key) && state.opts.exclude && g != null && s.pickedG.has(g)) el.classList.add("done");
+              if (g != null && s.lastG === g && !spinning && !settling) el.classList.add("chosen");
+            } else {
+              if (!s.absent.has(key) && state.opts.exclude && s.picked.has(key)) el.classList.add("done");
+              if (s.last === key && !spinning && !settling) el.classList.add("chosen");
+            }
+            if (state.opts.nums && seat.num) html += '<span class="num">' + esc(seat.num) + "</span>";
+            el.setAttribute("aria-label", (g != null ? gname(g) + " " : "") + (seat.num ? seat.num + "番 " : "") + where(key));
           }
         } else if (editSub === "layout") {
-          if (seat.on) { if (seat.num) el.innerHTML = '<span class="num">' + esc(seat.num) + "</span>"; }
-          else el.textContent = "＋";
+          if (seat.on) { if (seat.num) html += '<span class="num">' + esc(seat.num) + "</span>"; }
+          else html = "＋";
           el.setAttribute("aria-label", (seat.on ? "席あり " : "席なし ") + where(key));
-        } else {
+        } else if (editSub === "groups") {
+          if (seat.on) { if (seat.num) html += '<span class="num">' + esc(seat.num) + "</span>"; el.setAttribute("aria-label", (g != null ? gname(g) : "班なし") + " " + where(key)); }
+          else { el.disabled = true; el.setAttribute("aria-hidden", "true"); el.tabIndex = -1; }
+        }
+        if (html) el.innerHTML = html;
+        if (mode === "edit" && editSub === "numbers") {
           if (seat.on) {
             var inp = document.createElement("input");
             inp.inputMode = "numeric"; inp.value = seat.num; inp.id = "n" + key; inp.maxLength = 4;
@@ -416,7 +502,6 @@ select.text { width: auto; }
     $("viewTag").textContent = state.view === "teacher" ? "教師用表示（教卓側から見た向き）" : "生徒用表示";
     fit();
   }
-  function esc(t) { return String(t).replace(/[&<>"]/g, function (m) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]; }); }
 
   function fit() {
     var c = cls(), w = wrap.clientWidth, h = wrap.clientHeight;
@@ -431,23 +516,46 @@ select.text { width: auto; }
   }
   if (window.ResizeObserver) new ResizeObserver(fit).observe(wrap); else window.addEventListener("resize", fit);
 
+  function members(g) {
+    var c = cls(), s = ses(), keys = groupSeats(g);
+    var nums = [], abs = [];
+    keys.forEach(function (k) { var n = seatAt(c, k).num; if (!n) return; (s.absent.has(k) ? abs : nums).push(n); });
+    var byNum = function (a, b) { return (parseFloat(a) - parseFloat(b)) || String(a).localeCompare(String(b)); };
+    nums.sort(byNum); abs.sort(byNum);
+    var t = nums.length ? "メンバー：" + nums.map(esc).join("・") + "番" : keys.length + "席";
+    if (abs.length) t += "（欠席：" + abs.map(esc).join("・") + "番）";
+    return t;
+  }
+
   function renderResult(msg) {
     var c = cls(), s = ses(), box = $("result");
     if (msg) { box.innerHTML = '<div class="label">指名</div><div class="warn">' + msg + "</div>"; return; }
     if (spinning || settling) { box.innerHTML = '<div class="label">指名</div><div class="big">…</div><div class="where idle">選んでいます</div>'; return; }
-    if (!s.last) {
-      var n = candidates().length;
-      box.innerHTML = '<div class="label">指名</div><div class="where idle">スタートを押すと座席が光り始めます。<br>対象：' + n + "席</div>";
+    if (isG()) {
+      if (s.lastG == null) {
+        var ng = candidatesG().length;
+        box.innerHTML = '<div class="label">班を指名</div><div class="where idle">' +
+          (groupList().length ? "スタートを押すと班ごとに光ります。<br>対象：" + ng + "班" : "班が登録されていません。<br>「座席を編集」→「班分け」で登録できます。") + "</div>";
+        return;
+      }
+      box.innerHTML = '<div class="label">班を指名</div><div class="big"><span class="gdot" style="--gcol:' + GCOL[s.lastG] + '"></span>' + (s.lastG + 1) + '<small>班</small></div><div class="where">' + members(s.lastG) + "</div>";
       return;
     }
-    var seat = seatAt(c, s.last);
+    if (!s.last) {
+      box.innerHTML = '<div class="label">個人を指名</div><div class="where idle">スタートを押すと座席が光り始めます。<br>対象：' + candidates().length + "席</div>";
+      return;
+    }
+    var seat = seatAt(c, s.last), g = groupOf(c, s.last);
     var big = seat.num ? esc(seat.num) + "<small>番</small>" : "<small>この席</small>";
-    box.innerHTML = '<div class="label">指名</div><div class="big">' + big + '</div><div class="where">' + where(s.last) + "</div>";
+    box.innerHTML = '<div class="label">個人を指名</div><div class="big">' + big + '</div><div class="where">' + where(s.last) + (g != null ? "（" + gname(g) + "）" : "") + "</div>";
   }
   function renderHistory() {
     var c = cls(), s = ses(), h = $("history");
-    $("historyCard").hidden = !s.history.length;
-    h.innerHTML = s.history.slice().reverse().map(function (k) {
+    var list = isG() ? s.historyG : s.history;
+    $("historyCard").hidden = !list.length;
+    $("historyLabel").textContent = isG() ? "これまでに指名した班" : "これまでの指名";
+    h.innerHTML = list.slice().reverse().map(function (k) {
+      if (isG()) return '<span class="chip"><i class="gdot sm" style="--gcol:' + GCOL[k] + '"></i>' + gname(k) + "</span>";
       var seat = seatAt(c, k), p = k.split("-");
       return '<span class="chip">' + (seat.num ? esc(seat.num) + "番" : "前" + (+p[0] + 1) + "・" + (+p[1] + 1) + "列") + "</span>";
     }).join("");
@@ -457,6 +565,17 @@ select.text { width: auto; }
       return '<option value="' + c.id + '"' + (c.id === state.currentId ? " selected" : "") + ">" + esc(c.name || "無題のクラス") + "</option>";
     }).join("");
   }
+  function renderGPal() {
+    var c = cls();
+    if (currentG >= c.groups.count) currentG = c.groups.count - 1;
+    var html = "";
+    for (var g = 0; g < c.groups.count; g++) {
+      html += '<button class="gbtn" type="button" data-g="' + g + '" aria-pressed="' + (g === currentG) + '" style="--gcol:' + GCOL[g] + '">' +
+        '<i class="gdot sm" style="--gcol:' + GCOL[g] + '"></i>' + gname(g) + '<span class="cnt">' + groupSeats(g).length + "席</span></button>";
+    }
+    $("gPal").innerHTML = html;
+    $("gOut").textContent = c.groups.count;
+  }
   function renderPanels() {
     $("panelRoulette").hidden = mode !== "roulette";
     $("panelEdit").hidden = mode !== "edit";
@@ -464,17 +583,23 @@ select.text { width: auto; }
     $("mEdit").setAttribute("aria-pressed", mode === "edit");
     $("vStudent").setAttribute("aria-pressed", state.view === "student");
     $("vTeacher").setAttribute("aria-pressed", state.view === "teacher");
+    $("tSeat").setAttribute("aria-pressed", !isG());
+    $("tGroup").setAttribute("aria-pressed", isG());
     $("eLayout").setAttribute("aria-pressed", editSub === "layout");
     $("eNumbers").setAttribute("aria-pressed", editSub === "numbers");
+    $("eGroups").setAttribute("aria-pressed", editSub === "groups");
     $("layoutTools").hidden = editSub !== "layout";
     $("numberTools").hidden = editSub !== "numbers";
+    $("groupTools").hidden = editSub !== "groups";
     $("absentBtn").setAttribute("aria-pressed", absentMode);
     $("absentBtn").textContent = absentMode ? "欠席の選択を終える" : "欠席の席をタップで選ぶ";
     var c = cls();
     $("className").value = c.name;
     $("rOut").textContent = c.rows; $("cOut").textContent = c.cols;
     $("delClass").disabled = state.classes.length < 2;
-    $("optExclude").checked = state.opts.exclude; $("optNums").checked = state.opts.nums; $("optSound").checked = state.opts.sound;
+    $("optExclude").checked = state.opts.exclude; $("optNums").checked = state.opts.nums;
+    $("optGroups").checked = state.opts.groups; $("optSound").checked = state.opts.sound;
+    renderGPal();
   }
   function renderAll() { renderClassSel(); renderPanels(); renderGrid(); renderResult(); renderHistory(); }
 
@@ -489,11 +614,25 @@ select.text { width: auto; }
     }
     return out;
   }
-  function light(key) {
-    if (litKey) { var o = grid.querySelector('[data-key="' + litKey + '"]'); if (o) o.classList.remove("lit"); }
-    litKey = key;
-    var el = grid.querySelector('[data-key="' + key + '"]');
-    if (el) el.classList.add("lit");
+  function groupList() {
+    var out = [];
+    for (var g = 0; g < cls().groups.count; g++) if (groupSeats(g).length) out.push(g);
+    return out;
+  }
+  function candidatesG() {
+    var s = ses();
+    return groupList().filter(function (g) {
+      if (state.opts.exclude && s.pickedG.has(g)) return false;
+      return groupSeats(g).some(function (k) { return !s.absent.has(k); });
+    });
+  }
+  function pool() { return isG() ? candidatesG() : candidates(); }
+  function keysOf(item) { return isG() ? groupSeats(item) : [item]; }
+
+  function light(item) {
+    litKeys.forEach(function (k) { var o = grid.querySelector('[data-key="' + k + '"]'); if (o) o.classList.remove("lit"); });
+    litItem = item; litKeys = item == null ? [] : keysOf(item);
+    litKeys.forEach(function (k) { var el = grid.querySelector('[data-key="' + k + '"]'); if (el) el.classList.add("lit"); });
   }
   function randOther(list, prev) {
     if (list.length === 1) return list[0];
@@ -516,31 +655,38 @@ select.text { width: auto; }
   function keepAwake() { try { if (navigator.wakeLock && !wake) navigator.wakeLock.request("screen").then(function (w) { wake = w; w.addEventListener("release", function () { wake = null; }); }).catch(function () {}); } catch (e) {} }
 
   function start() {
-    var list = candidates();
-    if (!list.length) { renderResult(ses().picked.size ? "対象の席がありません。「当たった席をリセット」を押してください。" : "対象の席がありません。座席を登録してください。"); return; }
+    var list = pool(), s = ses();
+    if (!list.length) {
+      if (isG()) renderResult(!groupList().length ? "班が登録されていません。「座席を編集」→「班分け」で登録してください。" : "対象の班がありません。「当たりをリセット」を押してください。");
+      else renderResult(s.picked.size ? "対象の席がありません。「当たりをリセット」を押してください。" : "対象の席がありません。座席を登録してください。");
+      return;
+    }
     if (absentMode) { absentMode = false; renderPanels(); }
     keepAwake();
-    spinning = true; ses().last = null; litKey = null;
+    spinning = true; litItem = null; litKeys = [];
+    if (isG()) s.lastG = null; else s.last = null;
     renderGrid(); renderResult();
     var btn = $("goBtn"); btn.textContent = "ストップ"; btn.classList.add("spinning");
-    timer = setInterval(function () { light(randOther(list, litKey)); tick(880, 0.03); }, 70);
+    timer = setInterval(function () { light(randOther(list, litItem)); tick(880, 0.03); }, isG() ? 120 : 70);
   }
   function stop() {
     clearInterval(timer); spinning = false; settling = true;
     var btn = $("goBtn"); btn.disabled = true; btn.textContent = "…";
-    var list = candidates(), final = list[Math.floor(Math.random() * list.length)];
+    var list = pool(), final = list[Math.floor(Math.random() * list.length)];
+    var others = list.length > 1 ? list.filter(function (x) { return x !== final; }) : list;
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var delays = reduce ? [200, 300] : [90, 110, 135, 170, 215, 270, 340, 430, 540];
+    var delays = reduce ? [200, 300] : (isG() ? [140, 170, 210, 260, 320, 400, 500, 620] : [90, 110, 135, 170, 215, 270, 340, 430, 540]);
     var i = 0;
     (function step() {
       if (i < delays.length) {
-        var k = i === delays.length - 1 ? final : randOther(list.filter(function (x) { return x !== final || list.length === 1; }), litKey);
+        var k = i === delays.length - 1 ? final : randOther(others, litItem);
         light(k); tick(660, 0.04);
         setTimeout(step, delays[i++]);
       } else {
-        var s = ses(); s.last = final; s.picked.add(final); s.history.push(final);
-        if (s.history.length > 40) s.history.shift();
-        settling = false; litKey = null;
+        var s = ses();
+        if (isG()) { s.lastG = final; s.pickedG.add(final); s.historyG.push(final); if (s.historyG.length > 40) s.historyG.shift(); }
+        else { s.last = final; s.picked.add(final); s.history.push(final); if (s.history.length > 40) s.history.shift(); }
+        settling = false; litItem = null; litKeys = [];
         btn.disabled = false; btn.textContent = "スタート"; btn.classList.remove("spinning");
         tick(1320, 0.25);
         renderGrid(); renderResult(); renderHistory();
@@ -559,6 +705,9 @@ select.text { width: auto; }
     var c = cls(), key = el.dataset.key, seat = seatAt(c, key);
     if (mode === "edit" && editSub === "layout") {
       seat.on = !seat.on; save(); renderGrid();
+    } else if (mode === "edit" && editSub === "groups" && seat.on) {
+      if (c.groups.map[key] === currentG) delete c.groups.map[key]; else c.groups.map[key] = currentG;
+      delete session[c.id]; save(); renderGrid(); renderGPal();
     } else if (mode === "roulette" && absentMode && seat.on && !spinning && !settling) {
       var s = ses(); s.absent.has(key) ? s.absent.delete(key) : s.absent.add(key);
       renderGrid(); renderResult();
@@ -570,13 +719,17 @@ select.text { width: auto; }
   });
 
   // ---------- top bar ----------
-  $("classSel").addEventListener("change", function (e) { if (spinning || settling) return; state.currentId = e.target.value; save(); renderAll(); });
-  function setView(v) { if (spinning || settling) return; state.view = v; save(); renderPanels(); renderGrid(); renderResult(); }
+  function busy() { return spinning || settling; }
+  $("classSel").addEventListener("change", function (e) { if (busy()) { renderClassSel(); return; } state.currentId = e.target.value; currentG = 0; save(); renderAll(); });
+  function setView(v) { if (busy()) return; state.view = v; save(); renderPanels(); renderGrid(); renderResult(); }
   $("vStudent").addEventListener("click", function () { setView("student"); });
   $("vTeacher").addEventListener("click", function () { setView("teacher"); });
-  function setMode(m) { if (spinning || settling) return; mode = m; absentMode = false; renderPanels(); renderGrid(); renderResult(); }
+  function setMode(m) { if (busy()) return; mode = m; absentMode = false; renderPanels(); renderGrid(); renderResult(); renderHistory(); }
   $("mRoulette").addEventListener("click", function () { setMode("roulette"); });
   $("mEdit").addEventListener("click", function () { setMode("edit"); });
+  function setTarget(t) { if (busy()) return; state.target = t; save(); renderPanels(); renderGrid(); renderResult(); renderHistory(); }
+  $("tSeat").addEventListener("click", function () { setTarget("seat"); });
+  $("tGroup").addEventListener("click", function () { setTarget("group"); });
   $("fsBtn").addEventListener("click", function () {
     try {
       if (document.fullscreenElement) document.exitFullscreen().catch(function () {});
@@ -587,31 +740,39 @@ select.text { width: auto; }
   // ---------- roulette options ----------
   $("optExclude").addEventListener("change", function (e) { state.opts.exclude = e.target.checked; save(); renderGrid(); renderResult(); });
   $("optNums").addEventListener("change", function (e) { state.opts.nums = e.target.checked; save(); renderGrid(); });
+  $("optGroups").addEventListener("change", function (e) { state.opts.groups = e.target.checked; save(); renderGrid(); });
   $("optSound").addEventListener("change", function (e) { state.opts.sound = e.target.checked; save(); if (e.target.checked) tick(880, 0.08); });
-  $("absentBtn").addEventListener("click", function () { absentMode = !absentMode; renderPanels(); renderGrid(); });
-  $("resetPicked").addEventListener("click", function () { var s = ses(); s.picked.clear(); s.history = []; s.last = null; renderGrid(); renderResult(); renderHistory(); });
-  $("resetAbsent").addEventListener("click", function () { ses().absent.clear(); renderGrid(); renderResult(); });
+  $("absentBtn").addEventListener("click", function () { if (busy()) return; absentMode = !absentMode; renderPanels(); renderGrid(); });
+  $("resetPicked").addEventListener("click", function () {
+    if (busy()) return;
+    var s = ses(); s.picked.clear(); s.history = []; s.last = null; s.pickedG.clear(); s.historyG = []; s.lastG = null;
+    renderGrid(); renderResult(); renderHistory();
+  });
+  $("resetAbsent").addEventListener("click", function () { if (busy()) return; ses().absent.clear(); renderGrid(); renderResult(); });
 
   // ---------- edit ----------
-  $("eLayout").addEventListener("click", function () { editSub = "layout"; renderPanels(); renderGrid(); });
-  $("eNumbers").addEventListener("click", function () { editSub = "numbers"; renderPanels(); renderGrid(); });
+  function setSub(v) { editSub = v; renderPanels(); renderGrid(); }
+  $("eLayout").addEventListener("click", function () { setSub("layout"); });
+  $("eNumbers").addEventListener("click", function () { setSub("numbers"); });
+  $("eGroups").addEventListener("click", function () { setSub("groups"); });
   $("className").addEventListener("input", function (e) { cls().name = e.target.value; save(); renderClassSel(); });
+  function resetSession() { delete session[cls().id]; }
   function resize(rows, cols, fillOn) {
     var c = cls();
     rows = Math.max(1, Math.min(MAX, rows)); cols = Math.max(1, Math.min(MAX, cols));
     var s = makeSeats(rows, cols, fillOn);
     for (var r = 0; r < rows; r++) for (var col = 0; col < cols; col++)
       if (c.seats[r] && c.seats[r][col]) s[r][col] = c.seats[r][col];
+    Object.keys(c.groups.map).forEach(function (k) { var p = k.split("-"); if (+p[0] >= rows || +p[1] >= cols) delete c.groups.map[k]; });
     c.rows = rows; c.cols = cols; c.seats = s;
     resetSession(); save(); renderAll();
   }
-  function resetSession() { delete session[cls().id]; }
   $("rMinus").addEventListener("click", function () { resize(cls().rows - 1, cls().cols, true); });
   $("rPlus").addEventListener("click", function () { resize(cls().rows + 1, cls().cols, true); });
   $("cMinus").addEventListener("click", function () { resize(cls().rows, cls().cols - 1, true); });
   $("cPlus").addEventListener("click", function () { resize(cls().rows, cls().cols + 1, true); });
   $("fillAll").addEventListener("click", function () { cls().seats.forEach(function (row) { row.forEach(function (x) { x.on = true; }); }); resetSession(); save(); renderGrid(); });
-  $("grid77").addEventListener("click", function () { var c = cls(); c.rows = 7; c.cols = 7; c.seats = makeSeats(7, 7, false); resetSession(); save(); renderAll(); });
+  $("grid77").addEventListener("click", function () { var c = cls(); c.rows = 7; c.cols = 7; c.seats = makeSeats(7, 7, false); c.groups.map = {}; resetSession(); save(); renderAll(); });
   $("autoNum").addEventListener("click", function () {
     var c = cls(), dir = $("numDir").value, fromLeft = $("numStart").value === "L", n = 1;
     var colsOrder = []; for (var i = 0; i < c.cols; i++) colsOrder.push(fromLeft ? i : c.cols - 1 - i);
@@ -621,9 +782,41 @@ select.text { width: auto; }
     save(); renderGrid();
   });
   $("clearNum").addEventListener("click", function () { cls().seats.forEach(function (row) { row.forEach(function (x) { x.num = ""; }); }); save(); renderGrid(); });
+
+  // 班分け
+  function setGroupCount(n) {
+    var c = cls();
+    n = Math.max(1, Math.min(GMAX, n));
+    c.groups.count = n;
+    Object.keys(c.groups.map).forEach(function (k) { if (c.groups.map[k] >= n) delete c.groups.map[k]; });
+    resetSession(); save(); renderGPal(); renderGrid();
+  }
+  $("gMinus").addEventListener("click", function () { setGroupCount(cls().groups.count - 1); });
+  $("gPlus").addEventListener("click", function () { setGroupCount(cls().groups.count + 1); });
+  $("gPal").addEventListener("click", function (e) {
+    var b = e.target.closest(".gbtn"); if (!b) return;
+    currentG = +b.dataset.g; renderGPal();
+  });
+  $("gAuto").addEventListener("click", function () {
+    // 黒板に向かって左から2列ずつ、前から順に席を並べ、班の数で均等に区切る
+    var c = cls(), order = [];
+    for (var p = 0; p < c.cols; p += 2)
+      for (var r = 0; r < c.rows; r++)
+        for (var col = p; col < Math.min(p + 2, c.cols); col++)
+          if (c.seats[r][col].on) order.push(r + "-" + col);
+    var n = c.groups.count, base = Math.floor(order.length / n), extra = order.length % n, idx = 0;
+    c.groups.map = {};
+    for (var g = 0; g < n; g++) {
+      var size = base + (g < extra ? 1 : 0);
+      for (var j = 0; j < size; j++) c.groups.map[order[idx++]] = g;
+    }
+    resetSession(); save(); renderGPal(); renderGrid();
+  });
+  $("gClear").addEventListener("click", function () { cls().groups.map = {}; resetSession(); save(); renderGPal(); renderGrid(); });
+
   $("addClass").addEventListener("click", function () {
-    var nc = { id: uid(), name: "新しいクラス " + (state.classes.length + 1), rows: 6, cols: 6, seats: makeSeats(6, 6, true) };
-    state.classes.push(nc); state.currentId = nc.id; save(); renderAll(); $("className").focus(); $("className").select();
+    var nc = { id: uid(), name: "新しいクラス " + (state.classes.length + 1), rows: 6, cols: 6, seats: makeSeats(6, 6, true), groups: { count: 6, map: {} } };
+    state.classes.push(nc); state.currentId = nc.id; currentG = 0; save(); renderAll(); $("className").focus(); $("className").select();
   });
   $("delClass").addEventListener("click", function () { $("delConfirm").hidden = false; });
   $("delNo").addEventListener("click", function () { $("delConfirm").hidden = true; });
