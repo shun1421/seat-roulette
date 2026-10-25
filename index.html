@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2E4A3B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="座席ルーレット">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+html{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>座席ルーレット</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: one-screen classroom — chalkboard-green "room" holds the desk grid and the 教卓; control panel beside it (landscape) or below (portrait). */
+:root {
+  --paper: #ECEFE7;
+  --ink: #1D2722;
+  --muted: #5E6B64;
+  --line: #C9D1C8;
+  --surface: #F7F9F4;
+  --board: #2E4A3B;
+  --board-edge: #24392E;
+  --chalk-ink: #E8EEE6;
+  --chalk-dim: rgba(232, 238, 230, 0.38);
+  --desk: #D8B786;
+  --desk-edge: #B38F5C;
+  --desk-ink: #3B2A16;
+  --hit: #FFD54A;
+  --hit-glow: rgba(255, 213, 74, 0.55);
+  --go: #2F7A50;
+  --go-ink: #FFFFFF;
+  --stop: #C2452D;
+  --absent: #8B958F;
+  --f-display: "Dela Gothic One", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111714; --ink: #E2E8E3; --muted: #93A199; --line: #2A3530; --surface: #18201C;
+    --board: #1E3328; --board-edge: #162820; --chalk-ink: #E2E9E1; --chalk-dim: rgba(226,233,225,0.32);
+    --desk: #B9965F; --desk-edge: #8E6F40; --desk-ink: #241808;
+    --hit: #FFD54A; --hit-glow: rgba(255,213,74,0.5); --go: #3A9663; --go-ink: #FFFFFF; --stop: #D4573E; --absent: #5F6A64;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #111714; --ink: #E2E8E3; --muted: #93A199; --line: #2A3530; --surface: #18201C;
+  --board: #1E3328; --board-edge: #162820; --chalk-ink: #E2E9E1; --chalk-dim: rgba(226,233,225,0.32);
+  --desk: #B9965F; --desk-edge: #8E6F40; --desk-ink: #241808;
+  --hit: #FFD54A; --hit-glow: rgba(255,213,74,0.5); --go: #3A9663; --go-ink: #FFFFFF; --stop: #D4573E; --absent: #5F6A64;
+  color-scheme: dark;
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+.app {
+  height: 100%; display: flex; flex-direction: column; gap: 12px;
+  padding-block: 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+}
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--hit); outline-offset: 2px; }
+
+/* ---------- top bar ---------- */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.brand { font-family: var(--f-display); font-size: 20px; letter-spacing: 0.04em; margin-right: auto; white-space: nowrap; }
+.brand small { font-family: var(--f-body); font-size: 12px; color: var(--muted); letter-spacing: 0.08em; margin-left: 6px; font-weight: 500; }
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.seg button {
+  border: 0; background: transparent; padding: 7px 12px; border-radius: 7px; font-size: 14px; font-weight: 500; color: var(--muted);
+  min-height: 38px; white-space: nowrap;
+}
+.seg button[aria-pressed="true"] { background: var(--board); color: var(--chalk-ink); }
+.sel {
+  min-height: 40px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 0 10px; max-width: 12em;
+}
+.iconbtn { min-height: 40px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 0 12px; font-size: 14px; }
+
+/* ---------- main ---------- */
+.main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+@media (orientation: landscape) and (min-width: 760px) {
+  .main { flex-direction: row; }
+  .panel { width: 300px; flex: none; overflow-y: auto; }
+}
+@media not ((orientation: landscape) and (min-width: 760px)) {
+  .app { height: auto; min-height: 100%; }
+  .room { height: min(66vh, 92vw); flex: none !important; }
+}
+
+.room {
+  flex: 1; min-width: 0; min-height: 0; position: relative;
+  background: var(--board); border: 6px solid var(--board-edge); border-radius: 14px;
+  display: flex; flex-direction: column; padding: 12px; gap: 12px; box-sizing: border-box;
+  background-image: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.05), transparent 60%);
+}
+.room.teacher { flex-direction: column-reverse; }
+.podium-row { display: flex; align-items: center; justify-content: center; position: relative; min-height: 40px; }
+.podium {
+  background: var(--desk-edge); color: var(--chalk-ink); border-radius: 6px;
+  padding: 6px 34px; font-weight: 700; letter-spacing: 0.4em; font-size: 15px;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,0.18);
+}
+.viewtag {
+  position: absolute; left: 0; font-size: 12px; color: var(--chalk-dim); letter-spacing: 0.06em;
+  border: 1px dashed var(--chalk-dim); border-radius: 6px; padding: 2px 8px;
+}
+.gridwrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.grid { display: grid; gap: var(--gap, 8px); grid-template-columns: repeat(var(--cols), var(--cw, 60px)); grid-auto-rows: var(--ch, 46px); }
+
+.cell {
+  position: relative; border: 0; padding: 0; border-radius: 7px; background: transparent;
+  display: flex; align-items: center; justify-content: center; color: var(--desk-ink);
+  font-variant-numeric: tabular-nums;
+}
+.cell.on {
+  background: var(--desk);
+  box-shadow: inset 0 calc(var(--ch) * -0.1) 0 var(--desk-edge);
+}
+.cell .num { font-family: var(--f-display); font-size: calc(var(--ch) * 0.42); line-height: 1; padding-bottom: calc(var(--ch) * 0.06); }
+.cell .ghost { font-size: calc(var(--ch) * 0.22); opacity: 0.45; }
+.cell.lit { background: var(--hit); box-shadow: 0 0 0 3px var(--hit), 0 0 calc(var(--cw) * 0.45) var(--hit-glow); z-index: 2; }
+.cell.chosen { background: var(--hit); z-index: 3; box-shadow: 0 0 0 4px var(--hit), 0 0 calc(var(--cw) * 0.6) var(--hit-glow); animation: ring 1.1s ease-out 3; }
+@keyframes ring {
+  0% { box-shadow: 0 0 0 4px var(--hit), 0 0 0 4px var(--hit-glow); transform: scale(1); }
+  40% { transform: scale(1.08); }
+  100% { box-shadow: 0 0 0 4px var(--hit), 0 0 0 calc(var(--cw) * 0.35) rgba(255,213,74,0); transform: scale(1); }
+}
+.cell.absent { background: var(--absent); box-shadow: none; color: var(--chalk-ink); opacity: 0.75; }
+.cell.absent::after { content: "欠"; position: absolute; top: 3px; right: 5px; font-size: calc(var(--ch) * 0.2); font-weight: 700; }
+.cell.done { opacity: 0.5; }
+.cell.done::after { content: "済"; position: absolute; top: 3px; right: 5px; font-size: calc(var(--ch) * 0.2); font-weight: 700; color: var(--desk-ink); }
+.cell.absent .num { opacity: 0.8; }
+
+/* edit-mode cells */
+.edit .cell { cursor: pointer; }
+.edit .cell.off { border: 2px dashed var(--chalk-dim); color: var(--chalk-dim); font-size: calc(var(--ch) * 0.34); }
+.edit.numbers .cell.off { border-style: dotted; opacity: 0.4; cursor: default; }
+.cell input {
+  width: 78%; height: 68%; box-sizing: border-box; text-align: center; border: 2px solid var(--desk-edge); border-radius: 6px;
+  background: rgba(255,255,255,0.75); color: var(--desk-ink); font-family: var(--f-display); font-size: calc(var(--ch) * 0.32); padding: 0;
+}
+.pickmode .cell.on { cursor: pointer; outline: 2px dashed var(--chalk-dim); outline-offset: 2px; }
+
+/* ---------- panel ---------- */
+.panel { display: flex; flex-direction: column; gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.label { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; color: var(--muted); }
+.result { min-height: 132px; justify-content: center; }
+.result .big { font-family: var(--f-display); font-size: 64px; line-height: 1; display: flex; align-items: baseline; gap: 6px; }
+.result .big small { font-size: 24px; }
+.result .where { font-size: 15px; font-weight: 500; }
+.result .idle { color: var(--muted); }
+
+.go {
+  border: 0; border-radius: 14px; min-height: 76px; font-family: var(--f-display); font-size: 28px; letter-spacing: 0.2em;
+  background: var(--go); color: var(--go-ink); box-shadow: inset 0 -6px 0 rgba(0,0,0,0.2);
+}
+.go.spinning { background: var(--stop); }
+.go:disabled { opacity: 0.6; cursor: default; }
+.go:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2); }
+.note { font-size: 13px; color: var(--muted); }
+.warn { font-size: 13px; color: var(--stop); font-weight: 500; }
+
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.btn {
+  min-height: 40px; border: 1px solid var(--line); background: var(--paper); border-radius: 9px; padding: 0 12px; font-size: 14px; font-weight: 500;
+}
+.btn.primary { background: var(--board); color: var(--chalk-ink); border-color: var(--board); }
+.btn.danger { color: var(--stop); border-color: var(--stop); }
+.btn[aria-pressed="true"] { background: var(--board); color: var(--chalk-ink); border-color: var(--board); }
+.check { display: flex; align-items: center; gap: 10px; min-height: 36px; font-size: 14px; }
+.check input { width: 20px; height: 20px; accent-color: var(--go); }
+details > summary { cursor: pointer; font-weight: 700; font-size: 14px; list-style: none; display: flex; justify-content: space-between; }
+details > summary::after { content: "＋"; color: var(--muted); }
+details[open] > summary::after { content: "－"; }
+details[open] > summary { margin-bottom: 8px; }
+.opts { display: flex; flex-direction: column; gap: 6px; }
+.history { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 13px; padding: 3px 9px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+
+.stepper { display: flex; align-items: center; gap: 6px; }
+.stepper button { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); font-size: 20px; line-height: 1; }
+.stepper output { min-width: 2ch; text-align: center; font-family: var(--f-display); font-size: 22px; }
+.sizes { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; }
+.text { min-height: 40px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); padding: 0 10px; width: 100%; box-sizing: border-box; }
+select.text { width: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cell.chosen { animation: none; }
+}
+</style>
+</head>
+<body>
+
+
+<div class="app" id="app">
+  <header class="bar">
+    <div class="brand">座席ルーレット<small>指名用</small></div>
+    <select class="sel" id="classSel" aria-label="クラスを選ぶ"></select>
+    <div class="seg" role="group" aria-label="表示の向き">
+      <button id="vStudent" aria-pressed="true">生徒に提示</button>
+      <button id="vTeacher" aria-pressed="false">教師が確認</button>
+    </div>
+    <div class="seg" role="group" aria-label="モード">
+      <button id="mRoulette" aria-pressed="true">ルーレット</button>
+      <button id="mEdit" aria-pressed="false">座席を編集</button>
+    </div>
+    <button class="iconbtn" id="fsBtn">全画面</button>
+  </header>
+
+  <main class="main">
+    <section class="room" id="room" aria-label="教室の座席">
+      <div class="podium-row">
+        <span class="viewtag" id="viewTag">生徒用表示</span>
+        <div class="podium">教卓</div>
+      </div>
+      <div class="gridwrap" id="gridWrap"><div class="grid" id="grid"></div></div>
+    </section>
+
+    <!-- roulette panel -->
+    <aside class="panel" id="panelRoulette">
+      <div class="card result" id="result" aria-live="polite"></div>
+      <button class="go" id="goBtn">スタート</button>
+      <div class="card">
+        <details id="optDetails">
+          <summary>設定と欠席</summary>
+          <div class="opts">
+            <label class="check"><input type="checkbox" id="optExclude" checked> 当たった席は次から除く</label>
+            <label class="check"><input type="checkbox" id="optNums" checked> 座席に出席番号を表示</label>
+            <label class="check"><input type="checkbox" id="optSound"> 効果音を鳴らす</label>
+            <div class="row" style="margin-top:6px">
+              <button class="btn" id="absentBtn" aria-pressed="false">欠席の席をタップで選ぶ</button>
+            </div>
+            <div class="row">
+              <button class="btn" id="resetPicked">当たった席をリセット</button>
+              <button class="btn" id="resetAbsent">欠席をリセット</button>
+            </div>
+          </div>
+        </details>
+      </div>
+      <div class="card" id="historyCard">
+        <div class="label">これまでの指名</div>
+        <div class="history" id="history"></div>
+      </div>
+    </aside>
+
+    <!-- edit panel -->
+    <aside class="panel" id="panelEdit" hidden>
+      <div class="card">
+        <div class="label">クラス</div>
+        <input class="text" id="className" aria-label="クラス名">
+        <div class="row">
+          <button class="btn" id="addClass">＋ クラスを追加</button>
+          <button class="btn danger" id="delClass">削除</button>
+        </div>
+        <div class="row" id="delConfirm" hidden>
+          <span class="warn">このクラスを削除しますか？</span>
+          <button class="btn danger" id="delYes">削除する</button>
+          <button class="btn" id="delNo">やめる</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="seg" role="group" aria-label="編集する内容" style="align-self:flex-start">
+          <button id="eLayout" aria-pressed="true">席の配置</button>
+          <button id="eNumbers" aria-pressed="false">出席番号</button>
+        </div>
+        <div id="layoutTools" class="opts" style="gap:10px">
+          <div class="sizes">
+            <span>縦（前→後）</span>
+            <div class="stepper"><button id="rMinus" aria-label="行を減らす">−</button><output id="rOut">6</output><button id="rPlus" aria-label="行を増やす">＋</button><span class="note">行</span></div>
+            <span>横（左→右）</span>
+            <div class="stepper"><button id="cMinus" aria-label="列を減らす">−</button><output id="cOut">6</output><button id="cPlus" aria-label="列を増やす">＋</button><span class="note">列</span></div>
+          </div>
+          <div class="row">
+            <button class="btn" id="fillAll">すべて席にする</button>
+            <button class="btn" id="grid77">7×7から選ぶ</button>
+          </div>
+          <p class="note" style="margin:0">座席をタップすると「席あり／なし」が切り替わります。通路や空きは「なし」に。</p>
+        </div>
+        <div id="numberTools" class="opts" style="gap:10px" hidden>
+          <p class="note" style="margin:0">各席に出席番号を入力します（空欄でも使えます）。</p>
+          <div class="row">
+            <select class="text" id="numDir" aria-label="連番の向き">
+              <option value="v">縦に連番</option>
+              <option value="h">横に連番</option>
+            </select>
+            <select class="text" id="numStart" aria-label="連番の開始位置">
+              <option value="L">黒板に向かって左前から</option>
+              <option value="R">黒板に向かって右前から</option>
+            </select>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="autoNum">連番を振る</button>
+            <button class="btn" id="clearNum">番号を消す</button>
+          </div>
+        </div>
+      </div>
+      <p class="note">設定はこの端末のブラウザに保存されます。</p>
+    </aside>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "seat-roulette-v1";
+  var MAX = 9;
+
+  function makeSeats(rows, cols, on) {
+    var s = [];
+    for (var r = 0; r < rows; r++) { var row = []; for (var c = 0; c < cols; c++) row.push({ on: on, num: "" }); s.push(row); }
+    return s;
+  }
+  function uid() { return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function sampleClass() {
+    var s = makeSeats(6, 6, true), n = 1;
+    for (var c = 0; c < 6; c++) for (var r = 0; r < 6; r++) s[r][c].num = String(n++);
+    s[5][5].on = false; s[5][5].num = ""; s[5][4].num = "";
+    s[5][4].on = false;
+    return { id: uid(), name: "1年1組（例）", rows: 6, cols: 6, seats: s };
+  }
+
+  var state = { classes: [], currentId: null, view: "student", opts: { exclude: true, nums: true, sound: false } };
+  try {
+    var saved = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (saved && saved.classes && saved.classes.length) state = Object.assign(state, saved);
+  } catch (e) {}
+  if (!state.classes.length) { var sc = sampleClass(); state.classes.push(sc); state.currentId = sc.id; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function cls() {
+    var f = state.classes.find(function (c) { return c.id === state.currentId; });
+    if (!f) { f = state.classes[0]; state.currentId = f.id; }
+    return f;
+  }
+
+  // session-only state per class
+  var session = {};
+  function ses() { var id = cls().id; if (!session[id]) session[id] = { absent: new Set(), picked: new Set(), history: [], last: null }; return session[id]; }
+
+  var mode = "roulette", editSub = "layout", absentMode = false;
+  var spinning = false, settling = false, timer = null, litKey = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var grid = $("grid"), wrap = $("gridWrap"), room = $("room");
+
+  // ---------- rendering ----------
+  function seatAt(c, key) { var p = key.split("-"); return c.seats[+p[0]][+p[1]]; }
+  function where(key) {
+    var p = key.split("-"), r = +p[0] + 1, col = +p[1] + 1;
+    return state.view === "teacher"
+      ? "教卓から見て 右から" + col + "列目・前から" + r + "番目"
+      : "黒板に向かって 左から" + col + "列目・前から" + r + "番目";
+  }
+
+  function renderGrid() {
+    var c = cls(), s = ses();
+    grid.style.setProperty("--cols", c.cols);
+    grid.innerHTML = "";
+    grid.className = "grid";
+    room.classList.toggle("teacher", state.view === "teacher");
+    room.classList.toggle("edit", mode === "edit");
+    room.classList.toggle("numbers", mode === "edit" && editSub === "numbers");
+    room.classList.toggle("pickmode", mode === "roulette" && absentMode);
+    for (var dr = 0; dr < c.rows; dr++) {
+      for (var dc = 0; dc < c.cols; dc++) {
+        var r = state.view === "student" ? dr : c.rows - 1 - dr;
+        var col = state.view === "student" ? dc : c.cols - 1 - dc;
+        var seat = c.seats[r][col], key = r + "-" + col;
+        var el = document.createElement(mode === "edit" && editSub === "numbers" && seat.on ? "div" : "button");
+        el.className = "cell " + (seat.on ? "on" : "off");
+        el.dataset.key = key;
+        if (el.tagName === "BUTTON") el.type = "button";
+        if (mode === "roulette") {
+          if (!seat.on) { el.disabled = true; el.setAttribute("aria-hidden", "true"); el.tabIndex = -1; }
+          else {
+            if (s.absent.has(key)) el.classList.add("absent");
+            else if (state.opts.exclude && s.picked.has(key)) el.classList.add("done");
+            if (s.last === key && !spinning) el.classList.add("chosen");
+            if (state.opts.nums && seat.num) el.innerHTML = '<span class="num">' + esc(seat.num) + "</span>";
+            el.setAttribute("aria-label", (seat.num ? seat.num + "番 " : "") + where(key));
+          }
+        } else if (editSub === "layout") {
+          if (seat.on) { if (seat.num) el.innerHTML = '<span class="num">' + esc(seat.num) + "</span>"; }
+          else el.textContent = "＋";
+          el.setAttribute("aria-label", (seat.on ? "席あり " : "席なし ") + where(key));
+        } else {
+          if (seat.on) {
+            var inp = document.createElement("input");
+            inp.inputMode = "numeric"; inp.value = seat.num; inp.id = "n" + key; inp.maxLength = 4;
+            inp.setAttribute("aria-label", "出席番号 " + where(key));
+            inp.dataset.key = key;
+            el.appendChild(inp);
+          } else { el.setAttribute("aria-hidden", "true"); }
+        }
+        grid.appendChild(el);
+      }
+    }
+    $("viewTag").textContent = state.view === "teacher" ? "教師用表示（教卓側から見た向き）" : "生徒用表示";
+    fit();
+  }
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (m) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]; }); }
+
+  function fit() {
+    var c = cls(), w = wrap.clientWidth, h = wrap.clientHeight;
+    if (!w || !h) return;
+    var AR = 1.35;
+    var gap = Math.max(5, Math.min(14, Math.min(w, h) * 0.018));
+    var cw = Math.min((w - gap * (c.cols - 1)) / c.cols, ((h - gap * (c.rows - 1)) / c.rows) * AR, 170);
+    cw = Math.max(24, Math.floor(cw));
+    grid.style.setProperty("--gap", gap + "px");
+    grid.style.setProperty("--cw", cw + "px");
+    grid.style.setProperty("--ch", Math.floor(cw / AR) + "px");
+  }
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(wrap); else window.addEventListener("resize", fit);
+
+  function renderResult(msg) {
+    var c = cls(), s = ses(), box = $("result");
+    if (msg) { box.innerHTML = '<div class="label">指名</div><div class="warn">' + msg + "</div>"; return; }
+    if (spinning || settling) { box.innerHTML = '<div class="label">指名</div><div class="big">…</div><div class="where idle">選んでいます</div>'; return; }
+    if (!s.last) {
+      var n = candidates().length;
+      box.innerHTML = '<div class="label">指名</div><div class="where idle">スタートを押すと座席が光り始めます。<br>対象：' + n + "席</div>";
+      return;
+    }
+    var seat = seatAt(c, s.last);
+    var big = seat.num ? esc(seat.num) + "<small>番</small>" : "<small>この席</small>";
+    box.innerHTML = '<div class="label">指名</div><div class="big">' + big + '</div><div class="where">' + where(s.last) + "</div>";
+  }
+  function renderHistory() {
+    var c = cls(), s = ses(), h = $("history");
+    $("historyCard").hidden = !s.history.length;
+    h.innerHTML = s.history.slice().reverse().map(function (k) {
+      var seat = seatAt(c, k), p = k.split("-");
+      return '<span class="chip">' + (seat.num ? esc(seat.num) + "番" : "前" + (+p[0] + 1) + "・" + (+p[1] + 1) + "列") + "</span>";
+    }).join("");
+  }
+  function renderClassSel() {
+    $("classSel").innerHTML = state.classes.map(function (c) {
+      return '<option value="' + c.id + '"' + (c.id === state.currentId ? " selected" : "") + ">" + esc(c.name || "無題のクラス") + "</option>";
+    }).join("");
+  }
+  function renderPanels() {
+    $("panelRoulette").hidden = mode !== "roulette";
+    $("panelEdit").hidden = mode !== "edit";
+    $("mRoulette").setAttribute("aria-pressed", mode === "roulette");
+    $("mEdit").setAttribute("aria-pressed", mode === "edit");
+    $("vStudent").setAttribute("aria-pressed", state.view === "student");
+    $("vTeacher").setAttribute("aria-pressed", state.view === "teacher");
+    $("eLayout").setAttribute("aria-pressed", editSub === "layout");
+    $("eNumbers").setAttribute("aria-pressed", editSub === "numbers");
+    $("layoutTools").hidden = editSub !== "layout";
+    $("numberTools").hidden = editSub !== "numbers";
+    $("absentBtn").setAttribute("aria-pressed", absentMode);
+    $("absentBtn").textContent = absentMode ? "欠席の選択を終える" : "欠席の席をタップで選ぶ";
+    var c = cls();
+    $("className").value = c.name;
+    $("rOut").textContent = c.rows; $("cOut").textContent = c.cols;
+    $("delClass").disabled = state.classes.length < 2;
+    $("optExclude").checked = state.opts.exclude; $("optNums").checked = state.opts.nums; $("optSound").checked = state.opts.sound;
+  }
+  function renderAll() { renderClassSel(); renderPanels(); renderGrid(); renderResult(); renderHistory(); }
+
+  // ---------- roulette ----------
+  function candidates() {
+    var c = cls(), s = ses(), out = [];
+    for (var r = 0; r < c.rows; r++) for (var col = 0; col < c.cols; col++) {
+      var k = r + "-" + col;
+      if (!c.seats[r][col].on || s.absent.has(k)) continue;
+      if (state.opts.exclude && s.picked.has(k)) continue;
+      out.push(k);
+    }
+    return out;
+  }
+  function light(key) {
+    if (litKey) { var o = grid.querySelector('[data-key="' + litKey + '"]'); if (o) o.classList.remove("lit"); }
+    litKey = key;
+    var el = grid.querySelector('[data-key="' + key + '"]');
+    if (el) el.classList.add("lit");
+  }
+  function randOther(list, prev) {
+    if (list.length === 1) return list[0];
+    var k; do { k = list[Math.floor(Math.random() * list.length)]; } while (k === prev);
+    return k;
+  }
+  var audio = null;
+  function tick(freq, len) {
+    if (!state.opts.sound) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      var o = audio.createOscillator(), g = audio.createGain();
+      o.type = "square"; o.frequency.value = freq || 880;
+      g.gain.setValueAtTime(0.06, audio.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + (len || 0.05));
+      o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + (len || 0.05));
+    } catch (e) {}
+  }
+  var wake = null;
+  function keepAwake() { try { if (navigator.wakeLock && !wake) navigator.wakeLock.request("screen").then(function (w) { wake = w; w.addEventListener("release", function () { wake = null; }); }).catch(function () {}); } catch (e) {} }
+
+  function start() {
+    var list = candidates();
+    if (!list.length) { renderResult(ses().picked.size ? "対象の席がありません。「当たった席をリセット」を押してください。" : "対象の席がありません。座席を登録してください。"); return; }
+    if (absentMode) { absentMode = false; renderPanels(); }
+    keepAwake();
+    spinning = true; ses().last = null; litKey = null;
+    renderGrid(); renderResult();
+    var btn = $("goBtn"); btn.textContent = "ストップ"; btn.classList.add("spinning");
+    timer = setInterval(function () { light(randOther(list, litKey)); tick(880, 0.03); }, 70);
+  }
+  function stop() {
+    clearInterval(timer); spinning = false; settling = true;
+    var btn = $("goBtn"); btn.disabled = true; btn.textContent = "…";
+    var list = candidates(), final = list[Math.floor(Math.random() * list.length)];
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var delays = reduce ? [200, 300] : [90, 110, 135, 170, 215, 270, 340, 430, 540];
+    var i = 0;
+    (function step() {
+      if (i < delays.length) {
+        var k = i === delays.length - 1 ? final : randOther(list.filter(function (x) { return x !== final || list.length === 1; }), litKey);
+        light(k); tick(660, 0.04);
+        setTimeout(step, delays[i++]);
+      } else {
+        var s = ses(); s.last = final; s.picked.add(final); s.history.push(final);
+        if (s.history.length > 40) s.history.shift();
+        settling = false; litKey = null;
+        btn.disabled = false; btn.textContent = "スタート"; btn.classList.remove("spinning");
+        tick(1320, 0.25);
+        renderGrid(); renderResult(); renderHistory();
+      }
+    })();
+  }
+  $("goBtn").addEventListener("click", function () { if (settling) return; spinning ? stop() : start(); });
+  document.addEventListener("keydown", function (e) {
+    if (mode !== "roulette" || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.code === "Space" || e.code === "Enter") { if (e.target.tagName === "BUTTON" && e.target.id !== "goBtn") return; e.preventDefault(); if (!settling) (spinning ? stop : start)(); }
+  });
+
+  // ---------- grid interactions ----------
+  grid.addEventListener("click", function (e) {
+    var el = e.target.closest(".cell"); if (!el || e.target.tagName === "INPUT") return;
+    var c = cls(), key = el.dataset.key, seat = seatAt(c, key);
+    if (mode === "edit" && editSub === "layout") {
+      seat.on = !seat.on; save(); renderGrid();
+    } else if (mode === "roulette" && absentMode && seat.on && !spinning && !settling) {
+      var s = ses(); s.absent.has(key) ? s.absent.delete(key) : s.absent.add(key);
+      renderGrid(); renderResult();
+    }
+  });
+  grid.addEventListener("input", function (e) {
+    if (e.target.tagName !== "INPUT") return;
+    seatAt(cls(), e.target.dataset.key).num = e.target.value.trim(); save();
+  });
+
+  // ---------- top bar ----------
+  $("classSel").addEventListener("change", function (e) { if (spinning || settling) return; state.currentId = e.target.value; save(); renderAll(); });
+  function setView(v) { if (spinning || settling) return; state.view = v; save(); renderPanels(); renderGrid(); renderResult(); }
+  $("vStudent").addEventListener("click", function () { setView("student"); });
+  $("vTeacher").addEventListener("click", function () { setView("teacher"); });
+  function setMode(m) { if (spinning || settling) return; mode = m; absentMode = false; renderPanels(); renderGrid(); renderResult(); }
+  $("mRoulette").addEventListener("click", function () { setMode("roulette"); });
+  $("mEdit").addEventListener("click", function () { setMode("edit"); });
+  $("fsBtn").addEventListener("click", function () {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen().catch(function () {});
+      else document.documentElement.requestFullscreen().catch(function () { $("fsBtn").textContent = "全画面は使えません"; });
+    } catch (e) { $("fsBtn").textContent = "全画面は使えません"; }
+  });
+
+  // ---------- roulette options ----------
+  $("optExclude").addEventListener("change", function (e) { state.opts.exclude = e.target.checked; save(); renderGrid(); renderResult(); });
+  $("optNums").addEventListener("change", function (e) { state.opts.nums = e.target.checked; save(); renderGrid(); });
+  $("optSound").addEventListener("change", function (e) { state.opts.sound = e.target.checked; save(); if (e.target.checked) tick(880, 0.08); });
+  $("absentBtn").addEventListener("click", function () { absentMode = !absentMode; renderPanels(); renderGrid(); });
+  $("resetPicked").addEventListener("click", function () { var s = ses(); s.picked.clear(); s.history = []; s.last = null; renderGrid(); renderResult(); renderHistory(); });
+  $("resetAbsent").addEventListener("click", function () { ses().absent.clear(); renderGrid(); renderResult(); });
+
+  // ---------- edit ----------
+  $("eLayout").addEventListener("click", function () { editSub = "layout"; renderPanels(); renderGrid(); });
+  $("eNumbers").addEventListener("click", function () { editSub = "numbers"; renderPanels(); renderGrid(); });
+  $("className").addEventListener("input", function (e) { cls().name = e.target.value; save(); renderClassSel(); });
+  function resize(rows, cols, fillOn) {
+    var c = cls();
+    rows = Math.max(1, Math.min(MAX, rows)); cols = Math.max(1, Math.min(MAX, cols));
+    var s = makeSeats(rows, cols, fillOn);
+    for (var r = 0; r < rows; r++) for (var col = 0; col < cols; col++)
+      if (c.seats[r] && c.seats[r][col]) s[r][col] = c.seats[r][col];
+    c.rows = rows; c.cols = cols; c.seats = s;
+    resetSession(); save(); renderAll();
+  }
+  function resetSession() { delete session[cls().id]; }
+  $("rMinus").addEventListener("click", function () { resize(cls().rows - 1, cls().cols, true); });
+  $("rPlus").addEventListener("click", function () { resize(cls().rows + 1, cls().cols, true); });
+  $("cMinus").addEventListener("click", function () { resize(cls().rows, cls().cols - 1, true); });
+  $("cPlus").addEventListener("click", function () { resize(cls().rows, cls().cols + 1, true); });
+  $("fillAll").addEventListener("click", function () { cls().seats.forEach(function (row) { row.forEach(function (x) { x.on = true; }); }); resetSession(); save(); renderGrid(); });
+  $("grid77").addEventListener("click", function () { var c = cls(); c.rows = 7; c.cols = 7; c.seats = makeSeats(7, 7, false); resetSession(); save(); renderAll(); });
+  $("autoNum").addEventListener("click", function () {
+    var c = cls(), dir = $("numDir").value, fromLeft = $("numStart").value === "L", n = 1;
+    var colsOrder = []; for (var i = 0; i < c.cols; i++) colsOrder.push(fromLeft ? i : c.cols - 1 - i);
+    c.seats.forEach(function (row) { row.forEach(function (x) { x.num = ""; }); });
+    if (dir === "v") colsOrder.forEach(function (col) { for (var r = 0; r < c.rows; r++) if (c.seats[r][col].on) c.seats[r][col].num = String(n++); });
+    else for (var r = 0; r < c.rows; r++) colsOrder.forEach(function (col) { if (c.seats[r][col].on) c.seats[r][col].num = String(n++); });
+    save(); renderGrid();
+  });
+  $("clearNum").addEventListener("click", function () { cls().seats.forEach(function (row) { row.forEach(function (x) { x.num = ""; }); }); save(); renderGrid(); });
+  $("addClass").addEventListener("click", function () {
+    var nc = { id: uid(), name: "新しいクラス " + (state.classes.length + 1), rows: 6, cols: 6, seats: makeSeats(6, 6, true) };
+    state.classes.push(nc); state.currentId = nc.id; save(); renderAll(); $("className").focus(); $("className").select();
+  });
+  $("delClass").addEventListener("click", function () { $("delConfirm").hidden = false; });
+  $("delNo").addEventListener("click", function () { $("delConfirm").hidden = true; });
+  $("delYes").addEventListener("click", function () {
+    if (state.classes.length < 2) return;
+    var id = state.currentId;
+    state.classes = state.classes.filter(function (c) { return c.id !== id; });
+    delete session[id]; state.currentId = state.classes[0].id; $("delConfirm").hidden = true; save(); renderAll();
+  });
+
+  renderAll();
+})();
+</script>
+
+<script>
+if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+}
+</script>
+</body>
+</html>
